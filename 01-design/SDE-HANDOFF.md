@@ -245,6 +245,7 @@ function tiebreaker(a, b) {
 | GET | `/api/leaderboard/weekly?week=3` | Weekly leaderboard for a given week |
 | GET | `/api/leaderboard/stage?stage=1` | Stage leaderboard (aggregated) |
 | GET | `/api/leaderboard/overall` | Overall tournament standings |
+| GET | `/api/picks?week=3` | All 13 players' picks for every match in that week (Picks tab) |
 | GET | `/api/player/:id` | Player profile + stats |
 | GET | `/api/player/:id/predictions?week=3` | Player's match-by-match predictions |
 | GET | `/api/matches?week=3` | Match schedule + results for a week |
@@ -321,6 +322,28 @@ The frontend currently uses this data shape (see `sampleData.js`). Match this in
     { "team": "MI", "count": 3 }
   ]
 }
+```
+
+```json
+// GET /api/picks?week=3
+// Used by the "Picks" tab — shows every player's prediction for every match that week
+{
+  "week": 3,
+  "matches": [
+    {
+      "matchNum": 17,
+      "home": "CSK",
+      "away": "MI",
+      "winner": "CSK"       // null = no result, omit if pending
+    }
+  ],
+  "predictions": {
+    "1": { "17": "CSK", "18": "KKR", "19": "DC" },
+    "2": { "17": "MI",  "18": "KKR", "19": "SRH" }
+  }
+}
+// predictions key = playerId, value = { matchNum: predictedTeam }
+// Frontend renders accordion cards per match with all players' picks
 ```
 
 ---
@@ -409,24 +432,91 @@ Admin panel needs role-based access — only `ADMIN` role can access `/api/admin
 
 ---
 
-## Build Priority
+## Build Priority — What To Do, In Order
 
-### Week 1 — MVP (before IPL starts)
-1. Database setup + seed players + match schedule
-2. Admin: enter match results → scoring engine runs
-3. Admin: sync/upload predictions from Google Sheet
-4. API: weekly/stage/overall leaderboard endpoints
-5. Connect frontend to real API (replace `sampleData.js`)
+### Phase 1: Database + Data Ingestion (Do this FIRST)
 
-### Week 2 — Polish
-6. Player profile API
-7. Auth (even basic password)
-8. Admin panel UI
+| # | Task | Details |
+|---|---|---|
+| 1 | **Set up PostgreSQL on Supabase** | Create project, get connection string, add to `.env` |
+| 2 | **Run Prisma migrations** | Use `01-design/schema.prisma`, run `npx prisma migrate dev` |
+| 3 | **Seed 13 players** | Insert all 13 participants with correct roles (see seed data above) |
+| 4 | **Seed IPL 2026 match schedule** | All 74 matches with teams, dates, week numbers, stages. Get schedule from BCCI/IPL website. |
+| 5 | **Build Google Sheets sync** | Connect to the Google Form response sheet via Sheets API. Parse rows → `Prediction` records. One-click admin trigger. |
 
-### Later — Nice to Have
-9. Cricket API auto-fetch results
-10. Instagram Story share (canvas → image → Web Share API)
-11. Real-time updates (Supabase realtime subscriptions)
+### Phase 2: Scoring Engine (Core Logic — no bugs allowed)
+
+| # | Task | Details |
+|---|---|---|
+| 6 | **Build `scoreMatch()` function** | On match result entry: 10pts correct, 0pts wrong, 5pts no-result (to everyone). See scoring engine code above. |
+| 7 | **Build `recalculateWeeklyLeaderboard()`** | Aggregate per-player stats for a week. Apply tiebreaker chain. |
+| 8 | **Build stage + overall aggregation** | Stage = sum weeks 1-4 / 5-8 / 9. Overall = sum all weeks. |
+| 9 | **Test scoring with sample data** | Use the sample data from `sampleData.js` as test cases. Verify points match. |
+
+### Phase 3: API Endpoints (Wire up the frontend)
+
+| # | Task | Details |
+|---|---|---|
+| 10 | **`GET /api/leaderboard/weekly?week=N`** | Return ranked list with all stats. Match response shape above. |
+| 11 | **`GET /api/leaderboard/stage?stage=N`** | Aggregated stage standings. |
+| 12 | **`GET /api/leaderboard/overall`** | Grand tournament standings. |
+| 13 | **`GET /api/picks?week=N`** | All 13 players' picks per match for the Picks tab. Match response shape above. |
+| 14 | **`GET /api/player/:id`** | Player profile with stats, weekly points, team predictions, prize earnings. |
+| 15 | **`POST /api/admin/match-result`** | Admin enters match result → triggers scoring engine → recalculates leaderboards. |
+| 16 | **`POST /api/admin/sync-predictions`** | Pull latest predictions from Google Sheet. |
+
+### Phase 4: Connect Frontend to Backend
+
+| # | Task | Details |
+|---|---|---|
+| 17 | **Replace `sampleData.js` with API calls** | The React prototype uses hardcoded data. Replace imports with `fetch()` calls to your API endpoints. |
+| 18 | **Weekly tab** | Calls `/api/leaderboard/weekly?week=N` |
+| 19 | **Stage tab** | Calls `/api/leaderboard/stage?stage=N` |
+| 20 | **Overall tab** | Calls `/api/leaderboard/overall` |
+| 21 | **Picks tab** | Calls `/api/picks?week=N` — renders accordion match cards with all players' picks |
+| 22 | **Player Profile page** | Calls `/api/player/:id` |
+
+### Phase 5: Admin Panel + Auth
+
+| # | Task | Details |
+|---|---|---|
+| 23 | **Simple auth** | Google OAuth or password-based. Lock admin endpoints to `ADMIN` role. |
+| 24 | **Admin panel UI** | Page 3: enter match results, trigger Google Sheet sync, view audit log. |
+| 25 | **Score override** | Admin can override any prediction's points with a reason (logged). |
+
+### Phase 6: Nice to Have (Post-Launch)
+
+| # | Task | Details |
+|---|---|---|
+| 26 | **Cricket API auto-fetch** | Cron job to auto-pull match results (CricAPI or similar). Removes manual admin entry. |
+| 27 | **Instagram Story share** | Canvas-to-image generation + Web Share API. 1080x1920 story format. |
+| 28 | **Real-time updates** | Supabase realtime subscriptions to push leaderboard changes to connected clients. |
+
+---
+
+## Frontend Tabs → API Mapping
+
+| Tab | API Endpoint | What it shows |
+|---|---|---|
+| **Weekly** | `GET /api/leaderboard/weekly?week=N` | Rankings, points, W/L/D for one week |
+| **Stage** | `GET /api/leaderboard/stage?stage=N` | Aggregated rankings across a stage's weeks |
+| **Overall** | `GET /api/leaderboard/overall` | Grand tournament standings, top 5 prizes |
+| **Picks** | `GET /api/picks?week=N` | Every player's prediction for every match in that week |
+| **Player Profile** | `GET /api/player/:id` | Individual stats, charts, match history, prizes |
+
+---
+
+## Critical Data Flow (End-to-End)
+
+```
+1. Admin creates Google Form for Week N (e.g., "Week 3: Match 17-24")
+2. 13 players fill in predictions before first match of the week
+3. Admin clicks "Sync Predictions" → Backend reads Google Sheet → Predictions stored in DB
+4. Match happens → Result entered (admin or cricket API) → Scoring engine runs
+5. Points calculated → Weekly/Stage/Overall leaderboards recalculated
+6. Frontend fetches updated data → Dashboard shows latest standings
+7. Repeat for each match in the week
+```
 
 ---
 
@@ -436,9 +526,10 @@ Admin panel needs role-based access — only `ADMIN` role can access `/api/admin
 |---|---|
 | `01-design/PRD.md` | Full product requirements + rules |
 | `01-design/schema.prisma` | Database schema (Prisma) |
-| `01-design/SDE-HANDOFF.md` | This document |
-| `02-prototype/ill-dashboard/` | Working React prototype (reference UI) |
-| `02-prototype/ill-dashboard/src/data/sampleData.js` | Data shapes to match in API |
+| `01-design/SDE-HANDOFF.md` | This document — start here |
+| `02-prototype/ill-dashboard/` | Working React prototype (deployed on Vercel) |
+| `02-prototype/ill-dashboard/src/data/sampleData.js` | Data shapes + structures to match in API responses |
+| `02-prototype/ill-dashboard/src/components/PredictionsView.jsx` | Picks tab component — shows how predictions data is consumed |
 
 ---
 
@@ -450,6 +541,21 @@ Admin panel needs role-based access — only `ADMIN` role can access `/api/admin
 4. **Predictions are locked** once submitted. No edits.
 5. **Prize amounts are fixed** — see PRD section 4 for the full table.
 6. **Lappa badge** — last place each week gets "Lappa of the Week" label (fun/banter element, important to the group).
+7. **Picks tab must show all 13 players' predictions** — this is the audit/transparency feature. Everyone can see what everyone picked after match is over.
+
+---
+
+## Testing Checklist (Before Going Live)
+
+- [ ] Scoring: 10pts for correct, 0 for wrong, 5 for no-result — verified?
+- [ ] Late submission: predictions after match start → 0pts — working?
+- [ ] Tiebreakers: correct order (points → wins → weekly wins → playoff pts → admin)?
+- [ ] Prize amounts: weekly (₹700/₹300), stage (₹2500/₹1500/₹1000), overall (₹9000/₹5000/₹3500/₹2500/₹1500)?
+- [ ] All 4 tabs return correct data (Weekly, Stage, Overall, Picks)?
+- [ ] Player profile shows correct aggregated stats?
+- [ ] Google Sheet sync handles duplicate submissions (last one wins)?
+- [ ] Week boundary: Sunday 00:00 IST to Saturday 23:59 IST?
+- [ ] Stage mapping: weeks 1-4 = Stage 1, 5-8 = Stage 2, 9 = Stage 3?
 
 ---
 
