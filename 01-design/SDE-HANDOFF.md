@@ -21,7 +21,8 @@ A **real-time IPL prediction leaderboard** for 13 friends. The frontend prototyp
 ## Repo & Prototype
 
 - **Repo:** https://github.com/rajat-pm-lab/ipl-prediction-league
-- **Prototype:** `02-prototype/ill-dashboard/` (React + Vite)
+- **Live Prototype:** https://ipl-prediction-league.vercel.app/
+- **Prototype source:** `02-prototype/ill-dashboard/` (React + Vite)
 - **PRD:** `01-design/PRD.md` (full rules, scoring, prizes)
 - **Data model:** `01-design/schema.prisma` (Prisma schema, PostgreSQL)
 - **Sample data:** `02-prototype/ill-dashboard/src/data/sampleData.js` — replace this with real API calls
