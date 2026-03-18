@@ -2,20 +2,21 @@ import { useState } from 'react'
 import { getWeeklyLeaderboard, getStageLeaderboard, getOverallLeaderboard, STAGES } from '../data/sampleData'
 import Podium from '../components/Podium'
 import LeaderboardTable from '../components/LeaderboardTable'
+import PredictionsView from '../components/PredictionsView'
 
-const TABS = ['Weekly', 'Stage', 'Overall']
+const TABS = ['Weekly', 'Stage', 'Overall', 'Picks']
 
 export default function Leaderboard() {
   const [activeTab, setActiveTab] = useState('Weekly')
   const [selectedWeek, setSelectedWeek] = useState(3)
   const [selectedStage, setSelectedStage] = useState('STAGE_1')
 
-  let leaderboard
+  let leaderboard = []
   if (activeTab === 'Weekly') {
     leaderboard = getWeeklyLeaderboard(selectedWeek)
   } else if (activeTab === 'Stage') {
     leaderboard = getStageLeaderboard(selectedStage)
-  } else {
+  } else if (activeTab === 'Overall') {
     leaderboard = getOverallLeaderboard()
   }
 
@@ -80,8 +81,8 @@ export default function Leaderboard() {
         </span>
       </div>
 
-      {/* Podium */}
-      <Podium leaderboard={leaderboard} />
+      {/* Podium — hidden on Picks tab */}
+      {activeTab !== 'Picks' && <Podium leaderboard={leaderboard} />}
 
       {/* Tabs */}
       <div style={{
@@ -109,7 +110,7 @@ export default function Leaderboard() {
       </div>
 
       {/* Selectors */}
-      {activeTab === 'Weekly' && (
+      {(activeTab === 'Weekly' || activeTab === 'Picks') && (
         <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 12px' }}>
           <select
             value={selectedWeek}
@@ -147,8 +148,11 @@ export default function Leaderboard() {
         </div>
       )}
 
-      {/* Leaderboard Table */}
-      <LeaderboardTable leaderboard={leaderboard} activeTab={activeTab} />
+      {/* Leaderboard Table or Picks View */}
+      {activeTab === 'Picks'
+        ? <PredictionsView selectedWeek={selectedWeek} />
+        : <LeaderboardTable leaderboard={leaderboard} activeTab={activeTab} />
+      }
 
       <style>{`
         @keyframes pulse {

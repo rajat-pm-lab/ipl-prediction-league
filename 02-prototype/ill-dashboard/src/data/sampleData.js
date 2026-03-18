@@ -131,6 +131,90 @@ export const TEAM_PREDICTIONS_SAMPLE = [
   { team: 'LSG', count: 0 },
 ];
 
+// Match schedule per week (sample: weeks 1-3)
+export const MATCH_SCHEDULE = {
+  1: [
+    { matchNum: 1,  home: 'KKR',  away: 'RCB',  winner: 'KKR'  },
+    { matchNum: 2,  home: 'CSK',  away: 'MI',   winner: 'CSK'  },
+    { matchNum: 3,  home: 'DC',   away: 'PBKS', winner: 'PBKS' },
+    { matchNum: 4,  home: 'GT',   away: 'SRH',  winner: 'SRH'  },
+    { matchNum: 5,  home: 'LSG',  away: 'RR',   winner: 'RR'   },
+    { matchNum: 6,  home: 'MI',   away: 'KKR',  winner: 'MI'   },
+    { matchNum: 7,  home: 'RCB',  away: 'CSK',  winner: null   }, // no result
+  ],
+  2: [
+    { matchNum: 8,  home: 'SRH',  away: 'DC',   winner: 'SRH'  },
+    { matchNum: 9,  home: 'PBKS', away: 'GT',   winner: 'GT'   },
+    { matchNum: 10, home: 'RR',   away: 'LSG',  winner: 'LSG'  },
+    { matchNum: 11, home: 'MI',   away: 'RCB',  winner: 'RCB'  },
+    { matchNum: 12, home: 'KKR',  away: 'CSK',  winner: 'KKR'  },
+    { matchNum: 13, home: 'DC',   away: 'GT',   winner: 'GT'   },
+    { matchNum: 14, home: 'SRH',  away: 'RR',   winner: 'SRH'  },
+    { matchNum: 15, home: 'LSG',  away: 'PBKS', winner: 'LSG'  },
+  ],
+  3: [
+    { matchNum: 16, home: 'RCB',  away: 'DC',   winner: 'RCB'  },
+    { matchNum: 17, home: 'CSK',  away: 'MI',   winner: 'CSK'  },
+    { matchNum: 18, home: 'RCB',  away: 'KKR',  winner: 'KKR'  },
+    { matchNum: 19, home: 'DC',   away: 'SRH',  winner: 'SRH'  },
+    { matchNum: 20, home: 'GT',   away: 'LSG',  winner: 'GT'   },
+    { matchNum: 21, home: 'PBKS', away: 'RR',   winner: null   }, // no result
+    { matchNum: 22, home: 'MI',   away: 'RCB',  winner: 'MI'   },
+    { matchNum: 23, home: 'SRH',  away: 'CSK',  winner: 'CSK'  },
+    { matchNum: 24, home: 'KKR',  away: 'DC',   winner: 'KKR'  },
+  ],
+};
+
+// All players' predictions per match per week
+// Shape: { [weekNum]: { [playerId]: { [matchNum]: predictedTeam } } }
+export const ALL_PREDICTIONS = {
+  1: {
+    1:  { 1:'KKR', 2:'CSK', 3:'PBKS', 4:'GT',  5:'RR',  6:'MI',  7:'RCB' },
+    2:  { 1:'KKR', 2:'MI',  3:'DC',   4:'SRH', 5:'RR',  6:'MI',  7:'CSK' },
+    3:  { 1:'RCB', 2:'CSK', 3:'PBKS', 4:'SRH', 5:'LSG', 6:'KKR', 7:'RCB' },
+    4:  { 1:'KKR', 2:'CSK', 3:'DC',   4:'GT',  5:'RR',  6:'MI',  7:'CSK' },
+    5:  { 1:'RCB', 2:'MI',  3:'PBKS', 4:'SRH', 5:'LSG', 6:'MI',  7:'RCB' },
+    6:  { 1:'KKR', 2:'CSK', 3:'PBKS', 4:'SRH', 5:'RR',  6:'KKR', 7:'CSK' },
+    7:  { 1:'KKR', 2:'MI',  3:'DC',   4:'GT',  5:'RR',  6:'MI',  7:'RCB' },
+    8:  { 1:'RCB', 2:'CSK', 3:'PBKS', 4:'SRH', 5:'LSG', 6:'MI',  7:'CSK' },
+    9:  { 1:'KKR', 2:'MI',  3:'PBKS', 4:'GT',  5:'RR',  6:'KKR', 7:'RCB' },
+    10: { 1:'RCB', 2:'CSK', 3:'DC',   4:'SRH', 5:'LSG', 6:'MI',  7:'CSK' },
+    11: { 1:'KKR', 2:'MI',  3:'PBKS', 4:'GT',  5:'RR',  6:'MI',  7:'RCB' },
+    12: { 1:'KKR', 2:'CSK', 3:'PBKS', 4:'SRH', 5:'LSG', 6:'KKR', 7:'CSK' },
+    13: { 1:'RCB', 2:'MI',  3:'DC',   4:'SRH', 5:'RR',  6:'MI',  7:'RCB' },
+  },
+  2: {
+    1:  { 8:'DC',   9:'GT',   10:'LSG', 11:'RCB', 12:'KKR', 13:'GT',  14:'RR',  15:'PBKS' },
+    2:  { 8:'SRH',  9:'PBKS', 10:'RR',  11:'MI',  12:'CSK', 13:'DC',  14:'SRH', 15:'LSG'  },
+    3:  { 8:'SRH',  9:'GT',   10:'LSG', 11:'RCB', 12:'KKR', 13:'GT',  14:'SRH', 15:'LSG'  },
+    4:  { 8:'DC',   9:'PBKS', 10:'RR',  11:'MI',  12:'CSK', 13:'DC',  14:'RR',  15:'PBKS' },
+    5:  { 8:'SRH',  9:'GT',   10:'LSG', 11:'RCB', 12:'KKR', 13:'GT',  14:'SRH', 15:'LSG'  },
+    6:  { 8:'DC',   9:'PBKS', 10:'RR',  11:'MI',  12:'CSK', 13:'DC',  14:'RR',  15:'PBKS' },
+    7:  { 8:'SRH',  9:'GT',   10:'LSG', 11:'RCB', 12:'KKR', 13:'GT',  14:'SRH', 15:'LSG'  },
+    8:  { 8:'DC',   9:'PBKS', 10:'RR',  11:'MI',  12:'CSK', 13:'DC',  14:'RR',  15:'PBKS' },
+    9:  { 8:'SRH',  9:'GT',   10:'LSG', 11:'RCB', 12:'KKR', 13:'GT',  14:'SRH', 15:'LSG'  },
+    10: { 8:'DC',   9:'PBKS', 10:'RR',  11:'MI',  12:'KKR', 13:'DC',  14:'RR',  15:'PBKS' },
+    11: { 8:'SRH',  9:'GT',   10:'LSG', 11:'RCB', 12:'KKR', 13:'GT',  14:'SRH', 15:'LSG'  },
+    12: { 8:'DC',   9:'PBKS', 10:'RR',  11:'MI',  12:'CSK', 13:'DC',  14:'RR',  15:'PBKS' },
+    13: { 8:'SRH',  9:'GT',   10:'LSG', 11:'MI',  12:'KKR', 13:'DC',  14:'SRH', 15:'PBKS' },
+  },
+  3: {
+    1:  { 16:'RCB', 17:'CSK', 18:'KKR', 19:'DC',  20:'GT',  21:'RR',  22:'MI',  23:'SRH', 24:'KKR' },
+    2:  { 16:'DC',  17:'CSK', 18:'KKR', 19:'SRH', 20:'GT',  21:'PBKS',22:'MI',  23:'CSK', 24:'KKR' },
+    3:  { 16:'RCB', 17:'MI',  18:'RCB', 19:'DC',  20:'LSG', 21:'RR',  22:'RCB', 23:'CSK', 24:'DC'  },
+    4:  { 16:'RCB', 17:'CSK', 18:'KKR', 19:'DC',  20:'GT',  21:'RR',  22:'MI',  23:'SRH', 24:'KKR' },
+    5:  { 16:'DC',  17:'MI',  18:'RCB', 19:'SRH', 20:'GT',  21:'PBKS',22:'MI',  23:'CSK', 24:'KKR' },
+    6:  { 16:'RCB', 17:'CSK', 18:'KKR', 19:'SRH', 20:'GT',  21:'RR',  22:'MI',  23:'SRH', 24:'KKR' },
+    7:  { 16:'DC',  17:'CSK', 18:'RCB', 19:'DC',  20:'LSG', 21:'PBKS',22:'RCB', 23:'CSK', 24:'DC'  },
+    8:  { 16:'RCB', 17:'MI',  18:'KKR', 19:'SRH', 20:'GT',  21:'RR',  22:'MI',  23:'CSK', 24:'KKR' },
+    9:  { 16:'DC',  17:'CSK', 18:'RCB', 19:'DC',  20:'GT',  21:'PBKS',22:'RCB', 23:'SRH', 24:'DC'  },
+    10: { 16:'RCB', 17:'MI',  18:'KKR', 19:'SRH', 20:'LSG', 21:'RR',  22:'MI',  23:'CSK', 24:'KKR' },
+    11: { 16:'DC',  17:'CSK', 18:'RCB', 19:'DC',  20:'GT',  21:'PBKS',22:'MI',  23:'SRH', 24:'DC'  },
+    12: { 16:'RCB', 17:'MI',  18:'KKR', 19:'SRH', 20:'GT',  21:'RR',  22:'RCB', 23:'CSK', 24:'KKR' },
+    13: { 16:'DC',  17:'CSK', 18:'RCB', 19:'DC',  20:'LSG', 21:'PBKS',22:'MI',  23:'SRH', 24:'DC'  },
+  },
+};
+
 // Helper: get sorted leaderboard for a week
 export function getWeeklyLeaderboard(weekNum) {
   const data = WEEKLY_DATA[weekNum];
