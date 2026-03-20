@@ -24,7 +24,7 @@ export const PLAYERS = [
   { id: 9, name: 'Suyash', initials: 'SY', role: 'PARTICIPANT' },
   { id: 10, name: 'Tushar', initials: 'TU', role: 'PARTICIPANT' },
   { id: 11, name: 'Utkarsh', initials: 'UT', role: 'PARTICIPANT' },
-  { id: 12, name: 'Vikrant', initials: 'VK', role: 'ADMIN' },
+  { id: 12, name: 'Vikrant', initials: 'VK', role: 'ADMIN', avatar: '/avatars/vikrant.jpg' },
   { id: 13, name: 'Vipul', initials: 'VP', role: 'FINANCE', avatar: '/avatars/vipul.jpg' },
 ];
 
