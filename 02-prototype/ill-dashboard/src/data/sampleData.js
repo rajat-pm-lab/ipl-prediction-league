@@ -16,7 +16,7 @@ export const PLAYERS = [
   { id: 1, name: 'Aditya', initials: 'AD', role: 'GRIEVANCE' },
   { id: 2, name: 'Aman', initials: 'AM', role: 'PARTICIPANT' },
   { id: 3, name: 'Deepanshu', initials: 'DP', role: 'PARTICIPANT' },
-  { id: 4, name: 'Rajjo', initials: 'RJ', role: 'PARTICIPANT' },
+  { id: 4, name: 'Rajjo', initials: 'RJ', role: 'PARTICIPANT', avatar: '/avatars/rajjo.jpg' },
   { id: 5, name: 'Shan', initials: 'SN', role: 'AUDIT' },
   { id: 6, name: 'Shivek', initials: 'SK', role: 'PARTICIPANT' },
   { id: 7, name: 'Shubham', initials: 'SH', role: 'AUDIT' },
@@ -25,7 +25,7 @@ export const PLAYERS = [
   { id: 10, name: 'Tushar', initials: 'TU', role: 'PARTICIPANT' },
   { id: 11, name: 'Utkarsh', initials: 'UT', role: 'PARTICIPANT' },
   { id: 12, name: 'Vikrant', initials: 'VK', role: 'ADMIN' },
-  { id: 13, name: 'Vipul', initials: 'VP', role: 'FINANCE' },
+  { id: 13, name: 'Vipul', initials: 'VP', role: 'FINANCE', avatar: '/avatars/vipul.jpg' },
 ];
 
 export const IPL_TEAMS = [

@@ -3,6 +3,23 @@ import { AVATAR_COLORS } from '../data/sampleData'
 export default function Avatar({ player, size = 32 }) {
   const colorIndex = (player.id - 1) % AVATAR_COLORS.length
   const bg = AVATAR_COLORS[colorIndex]
+
+  if (player.avatar) {
+    return (
+      <img
+        src={player.avatar}
+        alt={player.name}
+        style={{
+          width: size,
+          height: size,
+          borderRadius: '50%',
+          objectFit: 'cover',
+          flexShrink: 0,
+        }}
+      />
+    )
+  }
+
   return (
     <div
       style={{
