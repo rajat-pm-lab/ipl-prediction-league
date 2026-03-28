@@ -9,7 +9,7 @@ const TABS = ['Weekly', 'Stage', 'Overall', 'Picks', 'TRANS']
 
 export default function Leaderboard() {
   const [activeTab, setActiveTab] = useState('Weekly')
-  const [selectedWeek, setSelectedWeek] = useState(3)
+  const [selectedWeek, setSelectedWeek] = useState(1)
   const [selectedStage, setSelectedStage] = useState('STAGE_1')
 
   let leaderboard = []

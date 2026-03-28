@@ -58,47 +58,37 @@ export const WEEKLY_DATA = {
     { playerId: 13, predicted: 9, played: 0, wins: 0, losses: 0, draws: 0, points: 0 },
   ],
   2: [
-    { playerId: 1, predicted: 8, played: 8, wins: 5, losses: 3, draws: 0, points: 50 },
-    { playerId: 2, predicted: 8, played: 8, wins: 6, losses: 1, draws: 1, points: 65 },
-    { playerId: 3, predicted: 8, played: 8, wins: 4, losses: 3, draws: 1, points: 45 },
-    { playerId: 4, predicted: 8, played: 8, wins: 4, losses: 4, draws: 0, points: 40 },
-    { playerId: 5, predicted: 8, played: 8, wins: 3, losses: 4, draws: 1, points: 35 },
-    { playerId: 6, predicted: 8, played: 8, wins: 3, losses: 5, draws: 0, points: 30 },
-    { playerId: 7, predicted: 8, played: 8, wins: 4, losses: 3, draws: 1, points: 45 },
-    { playerId: 8, predicted: 8, played: 8, wins: 3, losses: 5, draws: 0, points: 30 },
-    { playerId: 9, predicted: 8, played: 8, wins: 2, losses: 5, draws: 1, points: 25 },
-    { playerId: 10, predicted: 7, played: 8, wins: 2, losses: 5, draws: 0, points: 20 },
-    { playerId: 12, predicted: 8, played: 8, wins: 1, losses: 6, draws: 1, points: 15 },
-    { playerId: 13, predicted: 8, played: 8, wins: 1, losses: 7, draws: 0, points: 10 },
+    { playerId: 1, predicted: 0, played: 0, wins: 0, losses: 0, draws: 0, points: 0 },
+    { playerId: 2, predicted: 0, played: 0, wins: 0, losses: 0, draws: 0, points: 0 },
+    { playerId: 3, predicted: 0, played: 0, wins: 0, losses: 0, draws: 0, points: 0 },
+    { playerId: 4, predicted: 0, played: 0, wins: 0, losses: 0, draws: 0, points: 0 },
+    { playerId: 5, predicted: 0, played: 0, wins: 0, losses: 0, draws: 0, points: 0 },
+    { playerId: 6, predicted: 0, played: 0, wins: 0, losses: 0, draws: 0, points: 0 },
+    { playerId: 7, predicted: 0, played: 0, wins: 0, losses: 0, draws: 0, points: 0 },
+    { playerId: 8, predicted: 0, played: 0, wins: 0, losses: 0, draws: 0, points: 0 },
+    { playerId: 9, predicted: 0, played: 0, wins: 0, losses: 0, draws: 0, points: 0 },
+    { playerId: 10, predicted: 0, played: 0, wins: 0, losses: 0, draws: 0, points: 0 },
+    { playerId: 12, predicted: 0, played: 0, wins: 0, losses: 0, draws: 0, points: 0 },
+    { playerId: 13, predicted: 0, played: 0, wins: 0, losses: 0, draws: 0, points: 0 },
   ],
   3: [
-    { playerId: 1, predicted: 9, played: 9, wins: 7, losses: 1, draws: 1, points: 75 },
-    { playerId: 2, predicted: 9, played: 9, wins: 6, losses: 2, draws: 1, points: 65 },
-    { playerId: 3, predicted: 9, played: 9, wins: 5, losses: 3, draws: 1, points: 55 },
-    { playerId: 4, predicted: 9, played: 9, wins: 5, losses: 3, draws: 1, points: 55 },
-    { playerId: 5, predicted: 9, played: 9, wins: 4, losses: 4, draws: 1, points: 45 },
-    { playerId: 6, predicted: 9, played: 9, wins: 5, losses: 3, draws: 1, points: 55 },
-    { playerId: 7, predicted: 9, played: 9, wins: 3, losses: 5, draws: 1, points: 35 },
-    { playerId: 8, predicted: 9, played: 9, wins: 3, losses: 5, draws: 1, points: 35 },
-    { playerId: 9, predicted: 9, played: 9, wins: 4, losses: 4, draws: 1, points: 45 },
-    { playerId: 10, predicted: 8, played: 9, wins: 3, losses: 5, draws: 0, points: 30 },
-    { playerId: 12, predicted: 9, played: 9, wins: 2, losses: 6, draws: 1, points: 25 },
-    { playerId: 13, predicted: 9, played: 9, wins: 2, losses: 6, draws: 1, points: 25 },
+    { playerId: 1, predicted: 0, played: 0, wins: 0, losses: 0, draws: 0, points: 0 },
+    { playerId: 2, predicted: 0, played: 0, wins: 0, losses: 0, draws: 0, points: 0 },
+    { playerId: 3, predicted: 0, played: 0, wins: 0, losses: 0, draws: 0, points: 0 },
+    { playerId: 4, predicted: 0, played: 0, wins: 0, losses: 0, draws: 0, points: 0 },
+    { playerId: 5, predicted: 0, played: 0, wins: 0, losses: 0, draws: 0, points: 0 },
+    { playerId: 6, predicted: 0, played: 0, wins: 0, losses: 0, draws: 0, points: 0 },
+    { playerId: 7, predicted: 0, played: 0, wins: 0, losses: 0, draws: 0, points: 0 },
+    { playerId: 8, predicted: 0, played: 0, wins: 0, losses: 0, draws: 0, points: 0 },
+    { playerId: 9, predicted: 0, played: 0, wins: 0, losses: 0, draws: 0, points: 0 },
+    { playerId: 10, predicted: 0, played: 0, wins: 0, losses: 0, draws: 0, points: 0 },
+    { playerId: 12, predicted: 0, played: 0, wins: 0, losses: 0, draws: 0, points: 0 },
+    { playerId: 13, predicted: 0, played: 0, wins: 0, losses: 0, draws: 0, points: 0 },
   ],
 };
 
-// Match history for player profile view (Rajat, Week 3)
-export const MATCH_HISTORY_SAMPLE_W3 = [
-  { matchNum: 16, home: 'RCB', away: 'DC', predicted: 'RCB', winner: 'RCB', result: 'correct', points: 10 },
-  { matchNum: 17, home: 'CSK', away: 'MI', predicted: 'CSK', winner: 'CSK', result: 'correct', points: 10 },
-  { matchNum: 18, home: 'RCB', away: 'KKR', predicted: 'KKR', winner: 'KKR', result: 'correct', points: 10 },
-  { matchNum: 19, home: 'DC', away: 'SRH', predicted: 'DC', winner: 'SRH', result: 'incorrect', points: 0 },
-  { matchNum: 20, home: 'GT', away: 'LSG', predicted: 'GT', winner: 'GT', result: 'correct', points: 10 },
-  { matchNum: 21, home: 'PBKS', away: 'RR', predicted: 'RR', winner: null, result: 'draw', points: 5 },
-  { matchNum: 22, home: 'MI', away: 'RCB', predicted: 'MI', winner: 'MI', result: 'correct', points: 10 },
-  { matchNum: 23, home: 'SRH', away: 'CSK', predicted: 'SRH', winner: 'CSK', result: 'incorrect', points: 0 },
-  { matchNum: 24, home: 'KKR', away: 'DC', predicted: 'KKR', winner: 'KKR', result: 'correct', points: 10 },
-];
+// Match history for player profile view (placeholder — no results yet)
+export const MATCH_HISTORY_SAMPLE_W3 = [];
 
 // Cumulative points per week for the race chart
 export const CUMULATIVE_POINTS = PLAYERS.map((player) => {
@@ -115,15 +105,15 @@ export const CUMULATIVE_POINTS = PLAYERS.map((player) => {
   return { playerId: player.id, name: player.name, weeks };
 });
 
-// Team prediction frequency for Rajat (sample)
+// Team prediction frequency (placeholder — no results yet)
 export const TEAM_PREDICTIONS_SAMPLE = [
-  { team: 'CSK', count: 7 },
-  { team: 'MI', count: 5 },
-  { team: 'KKR', count: 4 },
-  { team: 'RCB', count: 3 },
-  { team: 'GT', count: 2 },
-  { team: 'DC', count: 1 },
-  { team: 'SRH', count: 1 },
+  { team: 'CSK', count: 0 },
+  { team: 'MI', count: 0 },
+  { team: 'KKR', count: 0 },
+  { team: 'RCB', count: 0 },
+  { team: 'GT', count: 0 },
+  { team: 'DC', count: 0 },
+  { team: 'SRH', count: 0 },
   { team: 'PBKS', count: 0 },
   { team: 'RR', count: 0 },
   { team: 'LSG', count: 0 },
