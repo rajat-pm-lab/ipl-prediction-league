@@ -1,54 +1,90 @@
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip, ReferenceLine } from 'recharts'
+import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts'
 import { PieChart, Pie, Cell } from 'recharts'
-import { PLAYERS, AVATAR_COLORS, WEEKLY_DATA, MATCH_HISTORY_SAMPLE_W3, TEAM_PREDICTIONS_SAMPLE, IPL_TEAMS, getOverallLeaderboard } from '../data/sampleData'
+import { api } from '../services/api'
 import Avatar from '../components/Avatar'
+
+const AVATAR_COLORS = [
+  '#FFD700', '#2979FF', '#00C853', '#FF6D00', '#AA00FF',
+  '#00BCD4', '#FF1744', '#76FF03', '#FF9100', '#448AFF',
+  '#E040FB', '#FFAB40', '#69F0AE',
+]
+
+const IPL_TEAMS = [
+  { abbr: 'CSK', color: '#FFD700' },
+  { abbr: 'MI', color: '#004BA0' },
+  { abbr: 'RCB', color: '#D4213D' },
+  { abbr: 'KKR', color: '#3A225D' },
+  { abbr: 'DC', color: '#004C93' },
+  { abbr: 'SRH', color: '#FF822A' },
+  { abbr: 'PBKS', color: '#ED1B24' },
+  { abbr: 'RR', color: '#254AA5' },
+  { abbr: 'GT', color: '#1C1C2B' },
+  { abbr: 'LSG', color: '#A72056' },
+]
 
 export default function PlayerProfile() {
   const { id } = useParams()
   const navigate = useNavigate()
   const playerId = Number(id)
-  const player = PLAYERS.find((p) => p.id === playerId)
 
-  if (!player) return <div style={{ padding: 40, textAlign: 'center' }}>Player not found</div>
+  const [player, setPlayer] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  const overall = getOverallLeaderboard()
-  const playerStats = overall.find((r) => r.playerId === playerId) || {}
-  const accuracy = playerStats.wins && (playerStats.wins + playerStats.losses) > 0
-    ? ((playerStats.wins / (playerStats.wins + playerStats.losses)) * 100).toFixed(1)
-    : '0'
+  useEffect(() => {
+    loadPlayer()
+  }, [playerId])
 
-  // Points over time
-  const chartData = [{ week: 'Start', player: 0, avg: 0 }]
-  for (let w = 1; w <= 3; w++) {
-    const weekData = WEEKLY_DATA[w]
-    if (!weekData) continue
-    const prev = chartData[chartData.length - 1]
-    const pw = weekData.find((d) => d.playerId === playerId)
-    const avgPts = weekData.reduce((sum, d) => sum + d.points, 0) / weekData.length
-    chartData.push({
-      week: `W${w}`,
-      player: prev.player + (pw ? pw.points : 0),
-      avg: prev.avg + avgPts,
-    })
+  async function loadPlayer() {
+    setLoading(true)
+    try {
+      const data = await api.player.get(playerId)
+      setPlayer(data)
+    } catch (err) {
+      console.error('Failed to load player:', err)
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  // Donut data
-  const donutData = [
-    { name: 'Correct', value: playerStats.wins || 0, color: 'var(--green)' },
-    { name: 'Incorrect', value: playerStats.losses || 0, color: 'var(--red)' },
-    { name: 'No Result', value: playerStats.draws || 0, color: 'var(--grey)' },
-  ]
+  if (loading) {
+    return <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-secondary)' }}>Loading...</div>
+  }
+
+  if (error || !player) {
+    return <div style={{ padding: 40, textAlign: 'center', color: 'var(--red)' }}>
+      {error || 'Player not found'}
+    </div>
+  }
 
   const colorIndex = (player.id - 1) % AVATAR_COLORS.length
   const playerColor = AVATAR_COLORS[colorIndex]
 
-  const matchHistory = MATCH_HISTORY_SAMPLE_W3
-  const teamPredictions = TEAM_PREDICTIONS_SAMPLE
+  const chartData = [{ week: 'Start', player: 0, avg: 0 }]
+  const avgPoints = player.weeklyPoints.length > 0
+    ? player.weeklyPoints.reduce((sum, w) => sum + w.points, 0) / player.weeklyPoints.length
+    : 0
+  
+  for (const wp of player.weeklyPoints) {
+    const prev = chartData[chartData.length - 1]
+    chartData.push({
+      week: `W${wp.week}`,
+      player: prev.player + wp.points,
+      avg: prev.avg + avgPoints,
+    })
+  }
+
+  const donutData = [
+    { name: 'Correct', value: player.overall.wins || 0, color: 'var(--green)' },
+    { name: 'Incorrect', value: player.overall.losses || 0, color: 'var(--red)' },
+    { name: 'No Result', value: player.overall.draws || 0, color: 'var(--grey)' },
+  ]
 
   return (
     <div style={{ paddingBottom: 32 }}>
-      {/* Nav Bar */}
       <div style={{
         display: 'flex', alignItems: 'center', padding: '14px 12px',
         position: 'sticky', top: 0, background: 'var(--bg)', zIndex: 100,
@@ -70,7 +106,6 @@ export default function PlayerProfile() {
         </span>
       </div>
 
-      {/* Player Card */}
       <div style={{
         margin: '0 12px', padding: '20px 16px 16px',
         background: 'linear-gradient(135deg, var(--surface), var(--surface-alt))',
@@ -95,25 +130,24 @@ export default function PlayerProfile() {
                 background: 'rgba(255,215,0,0.15)', padding: '3px 10px', borderRadius: 6,
                 border: '1px solid rgba(255,215,0,0.2)',
               }}>
-                🥈 Rank #{playerStats.rank || '-'}
+                Rank #{player.overall.rank || '-'}
               </span>
               <span style={{
                 fontSize: 11, fontWeight: 700, color: 'var(--green)',
                 background: 'rgba(0,200,83,0.12)', padding: '3px 10px', borderRadius: 6,
               }}>
-                {accuracy}% Acc
+                {player.overall.accuracy}% Acc
               </span>
             </div>
           </div>
         </div>
 
-        {/* Stat Tiles */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8, marginTop: 20, position: 'relative', zIndex: 1 }}>
           {[
-            { value: playerStats.points || 0, label: 'Points', color: 'var(--gold)' },
-            { value: playerStats.wins || 0, label: 'Wins', color: 'var(--green)' },
-            { value: playerStats.losses || 0, label: 'Losses', color: 'var(--red)' },
-            { value: playerStats.draws || 0, label: 'Draws', color: 'var(--blue)' },
+            { value: player.overall.points || 0, label: 'Points', color: 'var(--gold)' },
+            { value: player.overall.wins || 0, label: 'Wins', color: 'var(--green)' },
+            { value: player.overall.losses || 0, label: 'Losses', color: 'var(--red)' },
+            { value: player.overall.draws || 0, label: 'Draws', color: 'var(--blue)' },
           ].map((s) => (
             <div key={s.label} style={{
               background: 'rgba(255,255,255,0.04)', borderRadius: 12, padding: '12px 8px',
@@ -130,7 +164,6 @@ export default function PlayerProfile() {
         </div>
       </div>
 
-      {/* Points Over Time */}
       <Section title="Points Over Time" accentColor="var(--blue)">
         <ResponsiveContainer width="100%" height={160}>
           <AreaChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: -20 }}>
@@ -153,7 +186,6 @@ export default function PlayerProfile() {
         </div>
       </Section>
 
-      {/* Prediction Breakdown */}
       <Section title="Prediction Breakdown" accentColor="var(--green)">
         <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
           <div style={{ width: 110, height: 110, flexShrink: 0 }}>
@@ -169,7 +201,7 @@ export default function PlayerProfile() {
             <div style={{
               position: 'relative', top: -68, textAlign: 'center', pointerEvents: 'none',
             }}>
-              <div style={{ fontSize: 18, fontWeight: 900 }}>{playerStats.predicted || 0}</div>
+              <div style={{ fontSize: 18, fontWeight: 900 }}>{player.overall.predicted || 0}</div>
               <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--text-secondary)' }}>MATCHES</div>
             </div>
           </div>
@@ -185,11 +217,10 @@ export default function PlayerProfile() {
         </div>
       </Section>
 
-      {/* Team Loyalty Map */}
       <Section title="Team Loyalty Map" accentColor="var(--gold)">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6 }}>
-          {teamPredictions.map((tp) => {
-            const team = IPL_TEAMS.find((t) => t.abbr === tp.team)
+          {IPL_TEAMS.map((team) => {
+            const tp = player.teamPredictions?.find(t => t.team === team.abbr) || { count: 0 }
             const heat = tp.count >= 4 ? 'high' : tp.count >= 2 ? 'med' : tp.count > 0 ? 'low' : 'none'
             const heatStyles = {
               high: { background: 'rgba(0,200,83,0.2)', border: '1px solid rgba(0,200,83,0.15)', color: 'var(--green)' },
@@ -198,8 +229,8 @@ export default function PlayerProfile() {
               none: { background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.02)', color: 'rgba(255,255,255,0.2)' },
             }
             return (
-              <div key={tp.team} style={{ borderRadius: 8, padding: '10px 4px', textAlign: 'center', ...heatStyles[heat] }}>
-                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 0.5 }}>{tp.team}</div>
+              <div key={team.abbr} style={{ borderRadius: 8, padding: '10px 4px', textAlign: 'center', ...heatStyles[heat] }}>
+                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 0.5 }}>{team.abbr}</div>
                 <div style={{ fontSize: 14, fontWeight: 900, marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>{tp.count}</div>
               </div>
             )
@@ -207,56 +238,27 @@ export default function PlayerProfile() {
         </div>
       </Section>
 
-      {/* Prize Earnings */}
       <Section title="Prize Earnings" accentColor="var(--gold)">
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          <EarningCard label="Weekly Prizes" value="₹700" detail="1x Winner (Week 2)" />
-          <EarningCard label="Stage Prizes" value="₹0" detail="Stage 1 in progress" />
+          <EarningCard label="Weekly Prizes" value={`₹${player.prizeEarnings?.weekly || 0}`} detail="Weekly winners" />
+          <EarningCard label="Stage Prizes" value={`₹${player.prizeEarnings?.stage || 0}`} detail="Stage winners" />
           <div style={{
             gridColumn: '1 / -1', background: 'linear-gradient(135deg, rgba(255,215,0,0.08), rgba(255,215,0,0.02))',
             border: '1px solid rgba(255,215,0,0.15)', borderRadius: 12, padding: '14px 12px',
           }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Total Earnings</div>
-            <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--gold)', marginTop: 4, fontVariantNumeric: 'tabular-nums' }}>₹700</div>
+            <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--gold)', marginTop: 4, fontVariantNumeric: 'tabular-nums' }}>₹{player.prizeEarnings?.total || 0}</div>
             <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginTop: 2 }}>Out of ₹45,500 pool</div>
           </div>
         </div>
       </Section>
 
-      {/* Match History */}
-      <Section title="Match History — Week 3" accentColor="var(--red)">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {matchHistory.map((m) => (
-            <div key={m.matchNum} style={{
-              display: 'grid', gridTemplateColumns: '22px 1fr auto 36px',
-              gap: 8, alignItems: 'center', padding: '9px 10px',
-              background: 'rgba(255,255,255,0.02)', borderRadius: 10,
-              border: '1px solid rgba(255,255,255,0.03)',
-            }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-secondary)', textAlign: 'center' }}>#{m.matchNum}</div>
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 700 }}>
-                  <TeamBadge abbr={m.home} /> {m.home} vs {m.away} <TeamBadge abbr={m.away} />
-                </div>
-                <div style={{ fontSize: 10, color: 'var(--text-secondary)', fontWeight: 600 }}>
-                  Picked: <span style={{ color: 'var(--blue)', fontWeight: 700 }}>{m.predicted}</span>
-                  {' '}&bull;{' '}
-                  {m.result === 'draw' ? 'No Result' : `Won: ${m.winner}`}
-                </div>
-              </div>
-              <ResultIcon result={m.result} />
-              <div style={{
-                fontSize: 14, fontWeight: 800, textAlign: 'right', fontVariantNumeric: 'tabular-nums',
-                color: m.result === 'correct' ? 'var(--green)' : m.result === 'incorrect' ? 'var(--red)' : 'var(--grey)',
-              }}>
-                {m.result === 'correct' ? '+10' : m.result === 'draw' ? '+5' : '0'}
-              </div>
-            </div>
-          ))}
+      <Section title="Match History" accentColor="var(--red)">
+        <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-secondary)', fontSize: 12 }}>
+          View predictions in Picks tab
         </div>
       </Section>
 
-      {/* Head to Head */}
       <Section title="Head to Head" accentColor="var(--blue)">
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
@@ -295,36 +297,6 @@ function Legend({ color, label }) {
     <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, fontWeight: 600, color: 'var(--text-secondary)' }}>
       <div style={{ width: 8, height: 8, borderRadius: '50%', background: color }} />
       {label}
-    </div>
-  )
-}
-
-function TeamBadge({ abbr }) {
-  const team = IPL_TEAMS.find((t) => t.abbr === abbr)
-  return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-      width: 18, height: 18, borderRadius: 4, fontSize: 8, fontWeight: 800,
-      background: team?.color || '#333', color: '#fff', marginRight: 2, verticalAlign: 'middle',
-    }}>
-      {abbr?.[0]}
-    </span>
-  )
-}
-
-function ResultIcon({ result }) {
-  const styles = {
-    correct: { bg: 'rgba(0,200,83,0.15)', color: 'var(--green)', border: 'rgba(0,200,83,0.3)', icon: '✓' },
-    incorrect: { bg: 'rgba(255,23,68,0.15)', color: 'var(--red)', border: 'rgba(255,23,68,0.3)', icon: '✗' },
-    draw: { bg: 'rgba(96,125,139,0.15)', color: 'var(--grey)', border: 'rgba(96,125,139,0.3)', icon: '—' },
-  }
-  const s = styles[result] || styles.draw
-  return (
-    <div style={{
-      width: 24, height: 24, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: 12, fontWeight: 900, background: s.bg, color: s.color, border: `1px solid ${s.border}`,
-    }}>
-      {s.icon}
     </div>
   )
 }

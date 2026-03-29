@@ -1,31 +1,82 @@
-import { useState } from 'react'
-import { getWeeklyLeaderboard, getStageLeaderboard, getOverallLeaderboard, STAGES } from '../data/sampleData'
+import { useState, useEffect } from 'react'
+import { api } from '../services/api'
 import Podium from '../components/Podium'
 import LeaderboardTable from '../components/LeaderboardTable'
 import PredictionsView from '../components/PredictionsView'
 
 const TABS = ['Weekly', 'Stage', 'Overall', 'Picks']
 
+const STAGES = {
+  STAGE_1: { label: 'Stage 1', color: '#2979FF', weeks: [1, 2, 3, 4] },
+  STAGE_2: { label: 'Stage 2', color: '#FF6D00', weeks: [5, 6, 7, 8] },
+  STAGE_3: { label: 'Stage 3', color: '#FFD700', weeks: [9] },
+}
+
 export default function Leaderboard() {
   const [activeTab, setActiveTab] = useState('Weekly')
-  const [selectedWeek, setSelectedWeek] = useState(3)
+  const [selectedWeek, setSelectedWeek] = useState(1)
   const [selectedStage, setSelectedStage] = useState('STAGE_1')
+  const [leaderboard, setLeaderboard] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [config, setConfig] = useState(null)
 
-  let leaderboard = []
-  if (activeTab === 'Weekly') {
-    leaderboard = getWeeklyLeaderboard(selectedWeek)
-  } else if (activeTab === 'Stage') {
-    leaderboard = getStageLeaderboard(selectedStage)
-  } else if (activeTab === 'Overall') {
-    leaderboard = getOverallLeaderboard()
+  useEffect(() => {
+    loadConfig()
+  }, [])
+
+  useEffect(() => {
+    if (config) {
+      loadLeaderboard()
+    }
+  }, [activeTab, selectedWeek, selectedStage, config])
+
+  async function loadConfig() {
+    try {
+      const data = await api.config()
+      setConfig(data)
+    } catch (err) {
+      console.error('Failed to load config:', err)
+      setConfig({ stages: STAGES })
+    }
+  }
+
+  async function loadLeaderboard() {
+    setLoading(true)
+    setError(null)
+    
+    try {
+      let data
+      switch (activeTab) {
+        case 'Weekly':
+          data = await api.leaderboard.weekly(selectedWeek)
+          setLeaderboard(data.leaderboard || [])
+          break
+        case 'Stage':
+          data = await api.leaderboard.stage(selectedStage)
+          setLeaderboard(data.leaderboard || [])
+          break
+        case 'Overall':
+          data = await api.leaderboard.overall()
+          setLeaderboard(data.leaderboard || [])
+          break
+        default:
+          setLeaderboard([])
+      }
+    } catch (err) {
+      console.error('Failed to load leaderboard:', err)
+      setError(err.message)
+      setLeaderboard([])
+    } finally {
+      setLoading(false)
+    }
   }
 
   const currentStageKey = selectedWeek <= 4 ? 'STAGE_1' : selectedWeek <= 8 ? 'STAGE_2' : 'STAGE_3'
-  const currentStage = STAGES[currentStageKey]
+  const currentStage = (config?.stages && config.stages[currentStageKey]) || STAGES[currentStageKey]
 
   return (
     <div style={{ paddingBottom: 32 }}>
-      {/* Header */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '14px 12px 8px', position: 'sticky', top: 0,
@@ -54,7 +105,6 @@ export default function Leaderboard() {
         </div>
       </div>
 
-      {/* Stage Badge */}
       <div style={{
         margin: '12px 12px 0', padding: '10px 14px', borderRadius: 12,
         background: `linear-gradient(135deg, ${currentStage.color}20, ${currentStage.color}08)`,
@@ -81,10 +131,10 @@ export default function Leaderboard() {
         </span>
       </div>
 
-      {/* Podium — hidden on Picks tab */}
-      {activeTab !== 'Picks' && <Podium leaderboard={leaderboard} />}
+      {activeTab !== 'Picks' && !loading && !error && leaderboard.length > 0 && (
+        <Podium leaderboard={leaderboard} />
+      )}
 
-      {/* Tabs */}
       <div style={{
         display: 'flex', padding: '0 12px', marginTop: 20,
         borderBottom: '1px solid rgba(255,255,255,0.06)',
@@ -109,7 +159,6 @@ export default function Leaderboard() {
         ))}
       </div>
 
-      {/* Selectors */}
       {(activeTab === 'Weekly' || activeTab === 'Picks') && (
         <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 12px' }}>
           <select
@@ -130,7 +179,7 @@ export default function Leaderboard() {
 
       {activeTab === 'Stage' && (
         <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 12px', gap: 6, flexWrap: 'wrap' }}>
-          {Object.entries(STAGES).map(([key, stage]) => (
+          {Object.entries(config?.stages || STAGES).map(([key, stage]) => (
             <button
               key={key}
               onClick={() => setSelectedStage(key)}
@@ -148,11 +197,23 @@ export default function Leaderboard() {
         </div>
       )}
 
-      {/* Leaderboard Table or Picks View */}
-      {activeTab === 'Picks'
-        ? <PredictionsView selectedWeek={selectedWeek} />
-        : <LeaderboardTable leaderboard={leaderboard} activeTab={activeTab} />
-      }
+      {loading && (
+        <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-secondary)' }}>
+          Loading...
+        </div>
+      )}
+
+      {error && (
+        <div style={{ textAlign: 'center', padding: 40, color: 'var(--red)' }}>
+          {error}
+        </div>
+      )}
+
+      {!loading && !error && (
+        activeTab === 'Picks'
+          ? <PredictionsView selectedWeek={selectedWeek} />
+          : <LeaderboardTable leaderboard={leaderboard} activeTab={activeTab} />
+      )}
 
       <style>{`
         @keyframes pulse {
