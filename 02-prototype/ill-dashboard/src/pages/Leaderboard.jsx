@@ -4,7 +4,8 @@ import Podium from '../components/Podium'
 import LeaderboardTable from '../components/LeaderboardTable'
 import PredictionsView from '../components/PredictionsView'
 
-const TABS = ['Weekly', 'Stage', 'Overall', 'Picks']
+// TEMP: 'TRANS' tab — remove once backend goes live
+const TABS = ['Weekly', 'Stage', 'Overall', 'Picks', 'TRANS']
 
 const STAGES = {
   STAGE_1: { label: 'Stage 1', color: '#2979FF', weeks: [1, 2, 3, 4] },
@@ -145,7 +146,7 @@ export default function Leaderboard() {
             onClick={() => setActiveTab(tab)}
             style={{
               flex: 1, textAlign: 'center', padding: '12px 0',
-              fontSize: 13, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase',
+              fontSize: 11, fontWeight: 700, letterSpacing: 0.3, textTransform: 'uppercase',
               color: activeTab === tab ? 'var(--gold)' : 'var(--text-secondary)',
               cursor: 'pointer', position: 'relative', transition: 'color 0.2s',
               ...(activeTab === tab ? {
@@ -154,7 +155,7 @@ export default function Leaderboard() {
               } : {}),
             }}
           >
-            {tab}
+            {tab === 'TRANS' ? 'Wk 1 Picks' : tab}
           </div>
         ))}
       </div>

@@ -49,7 +49,8 @@ export default function PredictionsView({ selectedWeek }) {
         ))}
       </div>
 
-      {/* Weekly picks summary per player */}
+      {/* Weekly picks summary per player — only show when matches have results */}
+      {matches.some((m) => m.winner !== undefined) && (
       <div style={{
         marginTop: 16, padding: 14,
         background: 'var(--surface)', borderRadius: 14,
@@ -100,6 +101,7 @@ export default function PredictionsView({ selectedWeek }) {
           <LegendDot color="var(--blue)" label="No Result" />
         </div>
       </div>
+      )}
     </div>
   )
 }
