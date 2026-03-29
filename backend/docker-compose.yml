@@ -1,0 +1,25 @@
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ill
+      POSTGRES_PASSWORD: illpassword
+      POSTGRES_DB: ill_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: .
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: "postgresql://ill:illpassword@db:5432/ill_db"
+      JWT_SECRET: "dev-secret-change-in-production"
+      NODE_ENV: production
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
