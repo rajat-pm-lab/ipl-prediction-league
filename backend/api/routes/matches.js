@@ -2,6 +2,22 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db.js');
 
+/**
+ * @swagger
+ * /api/matches:
+ *   get:
+ *     summary: Get match schedule
+ *     tags: [Public]
+ *     parameters:
+ *       - in: query
+ *         name: week
+ *         schema:
+ *           type: integer
+ *         description: Filter by week number
+ *     responses:
+ *       200:
+ *         description: List of matches with teams and results
+ */
 router.get('/', async (req, res) => {
   try {
     const weekNum = req.query.week ? parseInt(req.query.week) : null;
@@ -31,6 +47,23 @@ router.get('/', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/matches/{matchNum}:
+ *   get:
+ *     summary: Get match details with all predictions
+ *     tags: [Public]
+ *     parameters:
+ *       - in: path
+ *         name: matchNum
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Match number
+ *     responses:
+ *       200:
+ *         description: Match details including predictions from all players
+ */
 router.get('/:matchNum', async (req, res) => {
   try {
     const matchNum = parseInt(req.params.matchNum);

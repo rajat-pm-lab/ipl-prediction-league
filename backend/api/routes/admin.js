@@ -7,6 +7,42 @@ const { authMiddleware, adminOnly } = require('../middleware/auth.js');
 router.use(authMiddleware);
 router.use(adminOnly);
 
+/**
+ * @swagger
+ * /api/admin/match-result:
+ *   post:
+ *     summary: Enter match result and trigger scoring
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - matchId
+ *               - result
+ *             properties:
+ *               matchId:
+ *                 type: integer
+ *                 description: Match database ID
+ *                 example: 1
+ *               result:
+ *                 type: string
+ *                 enum: [HOME_WIN, AWAY_WIN, NO_RESULT]
+ *                 example: HOME_WIN
+ *               winner:
+ *                 type: string
+ *                 description: Winning team abbreviation (required for HOME_WIN/AWAY_WIN)
+ *                 example: KKR
+ *     responses:
+ *       200:
+ *         description: Match result entered, points calculated
+ *       403:
+ *         description: Admin access required
+ */
 router.post('/match-result', async (req, res) => {
   try {
     const { matchId, result, winner } = req.body;
@@ -48,6 +84,48 @@ router.post('/match-result', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/admin/sync-predictions:
+ *   post:
+ *     summary: Sync predictions from Google Form data
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - weekNumber
+ *               - predictions
+ *             properties:
+ *               weekNumber:
+ *                 type: integer
+ *                 example: 1
+ *               predictions:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     playerName:
+ *                       type: string
+ *                     submittedAt:
+ *                       type: string
+ *                       format: date-time
+ *                     picks:
+ *                       type: object
+ *                       additionalProperties:
+ *                         type: string
+ *                       example:
+ *                         "1": "KKR"
+ *                         "2": "CSK"
+ *     responses:
+ *       200:
+ *         description: Predictions synced successfully
+ */
 router.post('/sync-predictions', async (req, res) => {
   try {
     const { weekNumber, predictions } = req.body;
@@ -57,7 +135,6 @@ router.post('/sync-predictions', async (req, res) => {
     }
 
     const matches = db.matches.findMany({ where: { weekNumber } });
-    const week = db.weeks.findUnique(weekNumber);
     const users = db.users.findMany();
     
     const results = { synced: 0, errors: [] };
@@ -111,6 +188,33 @@ router.post('/sync-predictions', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/admin/upload-predictions:
+ *   post:
+ *     summary: Upload predictions from CSV data
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - weekNumber
+ *               - csvData
+ *             properties:
+ *               weekNumber:
+ *                 type: integer
+ *               csvData:
+ *                 type: string
+ *                 description: CSV string with headers
+ *     responses:
+ *       200:
+ *         description: Predictions uploaded
+ */
 router.post('/upload-predictions', async (req, res) => {
   try {
     const { weekNumber, csvData } = req.body;
@@ -188,6 +292,35 @@ function parseCSV(csvData) {
   return predictions;
 }
 
+/**
+ * @swagger
+ * /api/admin/override-score:
+ *   post:
+ *     summary: Override a prediction's points (with audit log)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - predictionId
+ *               - newPoints
+ *               - reason
+ *             properties:
+ *               predictionId:
+ *                 type: integer
+ *               newPoints:
+ *                 type: integer
+ *               reason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Score overridden successfully
+ */
 router.post('/override-score', async (req, res) => {
   try {
     const { predictionId, newPoints, reason } = req.body;
@@ -226,6 +359,18 @@ router.post('/override-score', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/admin/audit-log:
+ *   get:
+ *     summary: View all score overrides and admin actions
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of all admin actions
+ */
 router.get('/audit-log', async (req, res) => {
   try {
     const overrides = db.scoreOverrides.findMany();
@@ -258,6 +403,29 @@ router.get('/audit-log', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/admin/matches:
+ *   post:
+ *     summary: Create or update matches
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - matches
+ *             properties:
+ *               matches:
+ *                 type: array
+ *     responses:
+ *       200:
+ *         description: Matches created
+ */
 router.post('/matches', async (req, res) => {
   try {
     const { matches } = req.body;
