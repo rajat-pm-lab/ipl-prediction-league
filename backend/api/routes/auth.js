@@ -36,6 +36,34 @@ function verifyToken(token) {
   }
 }
 
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: Login with email and password
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: vikrant@example.com
+ *               password:
+ *                 type: string
+ *                 example: ill2026
+ *     responses:
+ *       200:
+ *         description: Login successful, returns JWT token
+ *       401:
+ *         description: Invalid credentials
+ */
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -74,6 +102,38 @@ router.post('/login', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - password
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: NewPlayer
+ *               email:
+ *                 type: string
+ *                 example: newplayer@example.com
+ *               password:
+ *                 type: string
+ *                 example: mypassword123
+ *     responses:
+ *       201:
+ *         description: Registration successful
+ *       409:
+ *         description: Email already registered
+ */
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -118,6 +178,16 @@ router.post('/register', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/auth/users:
+ *   get:
+ *     summary: Get list of all users
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: List of users
+ */
 router.get('/users', async (req, res) => {
   try {
     const users = db.users.findMany();
@@ -139,6 +209,20 @@ router.get('/users', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/auth/me:
+ *   get:
+ *     summary: Get current user profile
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Current user profile
+ *       401:
+ *         description: Invalid or missing token
+ */
 router.get('/me', async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
@@ -175,5 +259,3 @@ router.get('/me', async (req, res) => {
 });
 
 module.exports = router;
-module.exports.generateToken = generateToken;
-module.exports.verifyToken = verifyToken;

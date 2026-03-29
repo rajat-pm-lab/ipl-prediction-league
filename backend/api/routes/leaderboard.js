@@ -8,6 +8,55 @@ const {
   STAGE_CONFIG,
 } = require('../services/scoring.js');
 
+/**
+ * @swagger
+ * /api/leaderboard/weekly:
+ *   get:
+ *     summary: Get weekly leaderboard
+ *     tags: [Public]
+ *     parameters:
+ *       - in: query
+ *         name: week
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 9
+ *         default: 1
+ *         description: Week number (1-9)
+ *     responses:
+ *       200:
+ *         description: Weekly leaderboard with rankings and points
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 week:
+ *                   type: integer
+ *                 stage:
+ *                   type: string
+ *                 leaderboard:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       rank:
+ *                         type: integer
+ *                       playerId:
+ *                         type: integer
+ *                       playerName:
+ *                         type: string
+ *                       points:
+ *                         type: integer
+ *                       wins:
+ *                         type: integer
+ *                       losses:
+ *                         type: integer
+ *                       draws:
+ *                         type: integer
+ *                       prizeAmount:
+ *                         type: integer
+ */
 router.get('/weekly', async (req, res) => {
   try {
     const weekNum = parseInt(req.query.week) || 1;
@@ -55,6 +104,24 @@ router.get('/weekly', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/leaderboard/stage:
+ *   get:
+ *     summary: Get stage leaderboard
+ *     tags: [Public]
+ *     parameters:
+ *       - in: query
+ *         name: stage
+ *         schema:
+ *           type: string
+ *           enum: [STAGE_1, STAGE_2, STAGE_3]
+ *         default: STAGE_1
+ *         description: Stage identifier
+ *     responses:
+ *       200:
+ *         description: Aggregated stage leaderboard
+ */
 router.get('/stage', async (req, res) => {
   try {
     const stage = req.query.stage || 'STAGE_1';
@@ -94,6 +161,16 @@ router.get('/stage', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/leaderboard/overall:
+ *   get:
+ *     summary: Get overall tournament leaderboard
+ *     tags: [Public]
+ *     responses:
+ *       200:
+ *         description: Grand tournament standings across all weeks
+ */
 router.get('/overall', async (req, res) => {
   try {
     const results = recalculateOverallLeaderboard();
@@ -124,6 +201,16 @@ router.get('/overall', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/leaderboard/cumulative:
+ *   get:
+ *     summary: Get cumulative points over time for race chart
+ *     tags: [Public]
+ *     responses:
+ *       200:
+ *         description: Points accumulated by each player across weeks
+ */
 router.get('/cumulative', async (req, res) => {
   try {
     const users = db.users.findMany();

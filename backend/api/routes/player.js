@@ -3,6 +3,23 @@ const router = express.Router();
 const db = require('../db.js');
 const { recalculateOverallLeaderboard } = require('../services/scoring.js');
 
+/**
+ * @swagger
+ * /api/player/{id}:
+ *   get:
+ *     summary: Get player profile with stats
+ *     tags: [Public]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Player ID
+ *     responses:
+ *       200:
+ *         description: Player profile with overall stats, weekly points, team predictions
+ */
 router.get('/:id', async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
@@ -80,6 +97,28 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/player/{id}/predictions:
+ *   get:
+ *     summary: Get player's match predictions
+ *     tags: [Public]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Player ID
+ *       - in: query
+ *         name: week
+ *         schema:
+ *           type: integer
+ *         description: Filter by week number
+ *     responses:
+ *       200:
+ *         description: Player's prediction history
+ */
 router.get('/:id/predictions', async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
