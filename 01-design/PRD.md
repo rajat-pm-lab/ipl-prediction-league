@@ -1,9 +1,9 @@
 # Indian Lappa League - Product Requirements Document
 
-**Version:** 1.0
+**Version:** 2.0
 **Author:** Rajat Singh (Product Lead)
-**Date:** March 17, 2026
-**Status:** Draft - Pending Review
+**Date:** March 31, 2026
+**Status:** Prototype Live — Sheets-powered backend deployed
 
 ---
 
@@ -16,12 +16,20 @@ Indian Lappa League (ILL) is a private prediction dashboard for IPL 2026. A grou
 The group currently has no centralized way to submit predictions, track standings, or see how they compare against each other across the IPL season. Coordination happens over WhatsApp which is error-prone and hard to audit.
 
 ### 1.3 Goals
-- Give all 13 participants a single place to view standings and track competition
+- Give all 12 participants a single place to view standings and track competition
 - Automate scoring based on the official ILL rulebook
 - Show real-time leaderboards at weekly, stage, and overall levels
 - Make it mobile-first (most users check on phones)
 - Keep the UI minimal — maximum 2-3 pages, clean navigation with back/forward
 - Produce a clear prototype + specs for a developer to build the production app
+
+### 1.4 Current State (as of March 31, 2026)
+- **Live prototype:** https://ipl-league-sheets.vercel.app (ipl-league-sheets repo)
+- **Backend:** Google Sheets as database — no traditional backend needed for prototype
+- **Predictions:** Google Form → CSV → pasted into Google Sheet weekly tabs by admin
+- **Match results:** Admin fills winner in Google Sheet → scores update within ~60 seconds on site
+- **Scoring:** Serverless function reads Sheet, computes points live on each request
+- **12 players active** (Utkarsh removed from league)
 
 ---
 
@@ -420,15 +428,30 @@ The scoring engine must implement the following logic:
 
 ---
 
-## 10. Tech Stack (Prototype)
+## 10. Tech Stack (Prototype — Live)
 
 | Layer | Choice | Rationale |
 | --- | --- | --- |
-| Frontend | React | As per project spec |
-| Backend | Node.js | As per project spec |
-| Database | SQLite or PostgreSQL | Simple relational data |
-| Deployment | Vercel | As per project spec |
-| Source control | GitHub | As per project spec |
+| Frontend | React + Vite | Mobile-first, deployed on Vercel |
+| Backend | Vercel Serverless Functions | `/api/sheets-data.js` — reads Sheets, computes scores |
+| Database | Google Sheets (ID: `15YEBSCRUec2f0DhPmYLVipr8h9A944KViB7INRVfeMc`) | Admin-editable, no SQL needed for prototype |
+| Deployment | Vercel | Live at https://ipl-league-sheets.vercel.app |
+| Source control | GitHub (ipl-league-sheets repo) | Independent from Shaan's backend work |
+| Auth | Google Cloud Service Account | Sheets API access via `googleapis` npm package |
+
+**Two repos exist:**
+- `ipl-league-sheets` — active prototype with Sheets backend (this is what's live)
+- `ipl-prediction-league` — Shaan's repo with traditional Node.js backend (separate work)
+
+**Key env vars on Vercel (ipl-league-sheets project):**
+- `GOOGLE_SHEETS_ID` — Sheet ID
+- `GOOGLE_SHEETS_CLIENT_EMAIL` — service account email
+- `GOOGLE_SHEETS_PRIVATE_KEY` — service account private key (rotate if exposed)
+
+**Google Sheet tabs:**
+- `Rules` — scoring points per stage (editable by admin, no code deploy needed)
+- `Match Results` — match schedule + winner column (admin fills winner to trigger scoring)
+- `Week N` — predictions per player per week (paste CSV from Google Form responses)
 
 ---
 
@@ -443,23 +466,31 @@ The scoring engine must implement the following logic:
 
 ---
 
-## 12. Open Questions
+## 12. Open Questions / Decisions Made
 
-1. **Weekly twists:** The rulebook mentions "All weekly twists build on top of this base scoring system." Are there specific twist mechanics for each week, or is this left to the admin to announce? If specific twists exist, they need to be documented to build into the scoring engine.
+| Question | Decision |
+| --- | --- |
+| Weekly twists / dynamic scoring | Rules tab in Google Sheet — admin edits points per stage, no code deploy needed (see Section 10 and 12.1 below) |
+| Prediction visibility | Not yet built — reveal only after match complete |
+| Stage 3 (Playoffs) | Kept separate as Week 9 |
+| Admin result entry | Match-by-match via Google Sheet winner column |
+| Participant names | Real names used; nicknames mapped in code (Pincha=Deepanshu, Gungun=Shubham, Suddi=Sudarshan, Adi=Aditya, Shaan=Shan) |
+| Google Form sync | Manual: admin downloads CSV, pastes into Sheet tab `Week N` |
+| Player photos | Photos for Rajjo, Vipul, Vikrant added; others use colored initials fallback |
 
-2. **Prediction visibility:** Should participants be able to see others' predictions before the match on the dashboard? (Recommended: No - reveal only after match is complete to prevent copying.)
+### 12.1 Dynamic Rules — How Weekly Twists Work
 
-3. **Stage 3 (Playoffs):** Playoffs have only 4 matches in 1 week. Should the weekly and stage leaderboard be combined for Stage 3, or kept separate?
+The `Rules` tab in Google Sheet is structured to support per-stage scoring:
 
-4. **Admin result entry:** Should the admin enter results match-by-match, or can they bulk-enter at end of day?
+| rule_key | points | stage1 | stage2 | stage3 | notes |
+|---|---|---|---|---|---|
+| correct_pick | 10 | 10 | 10 | 15 | Can override per stage |
+| wrong_pick | 0 | 0 | 0 | 0 | Always 0 |
+| no_result | 5 | 5 | 5 | 5 | Rain/abandoned |
 
-5. **Participant names:** Should we use real names, nicknames, or let participants choose display names?
+**To change rules for a new week/stage:** Edit the stage column in the Rules tab. No code deploy needed. Changes reflect on site within 60 seconds.
 
-6. **Google Form sync:** Should prediction data be imported manually by admin (CSV upload) or auto-synced via Google Sheets API?
-
-7. **Player photos:** Will participants provide their own photos, or should we use WhatsApp profile pics / a default avatar set?
-
-8. **Instagram Story format:** What dimensions and branding style for the shareable image? (Recommended: 1080x1920 story format with ILL branding.)
+**Weekly twists (bonus rules):** If a twist applies to a specific week (not just a stage), add a new row with a `week_N` column and handle it in `lib/scoring.js`. Document any new twist here before implementing.
 
 ---
 
