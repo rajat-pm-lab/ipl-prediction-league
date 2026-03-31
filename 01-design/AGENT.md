@@ -12,31 +12,34 @@ Indian Lappa League (ILL) — private IPL 2026 prediction league for 12 NSIT alu
 ## Two Repos
 
 | Repo | What It Is | Live URL |
-|---|---|---|
+| --- | --- | --- |
 | `ipl-league-sheets` | **Active prototype** — Google Sheets backend, serverless scoring | https://ipl-league-sheets.vercel.app |
 | `ipl-prediction-league` | Shaan's work — traditional Node.js backend (separate, don't touch without Rajat confirming) | ipl-prediction-league.vercel.app |
 
-**Always work in `ipl-league-sheets` unless explicitly told otherwise.**
+**Always work in ****`ipl-league-sheets`**** unless explicitly told otherwise.**
 
 ---
 
 ## Players (12 active)
+Source of truth: `lib/constants.js` PLAYERS array and NAME_ALIASES map.
+
 | ID | Name | Nickname | Photo |
-|---|---|---|---|
-| 1 | Rajat | Rajjo | ✓ |
-| 2 | Vikrant | — | ✓ |
-| 3 | Vipul | — | ✓ |
-| 4 | Deepanshu | Pincha | initials |
-| 5 | Shubham | Gungun | initials |
-| 6 | Sudarshan | Suddi | initials |
-| 7 | Aditya | Adi | initials |
-| 8 | Shan | Shaan | initials |
-| 9 | Akash | — | initials |
-| 10 | Kartik | — | initials |
-| 12 | Himanshu | — | initials |
-| 13 | Nishant | — | initials |
+| --- | --- | --- | --- |
+| 1 | Aditya | Adi | initials |
+| 2 | Aman | — | initials |
+| 3 | Deepanshu | Pincha | initials |
+| 4 | Rajjo | Rajat | ✓ |
+| 5 | Shan | Shaan | initials |
+| 6 | Shivek | — | initials |
+| 7 | Shubham | Gungun | initials |
+| 8 | Sudarshan | Suddi | initials |
+| 9 | Suyash | — | initials |
+| 10 | Tushar | Tushar Bhasin | initials |
+| 12 | Vikrant | — | ✓ |
+| 13 | Vipul | — | ✓ |
 
 ID 11 (Utkarsh) was removed. IDs intentionally non-sequential.
+If player roster changes, update `NAME_ALIASES` in `lib/constants.js`.
 
 ---
 
@@ -48,11 +51,13 @@ ID 11 (Utkarsh) was removed. IDs intentionally non-sequential.
 ---
 
 ## Tournament Structure
-| Stage | Weeks | Matches |
-|---|---|---|
-| Stage 1 | Weeks 1-4 | First 35 league matches |
-| Stage 2 | Weeks 5-8 | Next 35 league matches |
-| Stage 3 | Week 9 | Playoffs (4 matches) |
+| Stage | Weeks | Color |
+| --- | --- | --- |
+| Stage 1 | Weeks 1-3 | Electric Blue |
+| Stage 2 | Weeks 4-6 | Vivid Orange |
+| Stage 3 | Weeks 7-9 | Championship Gold |
+
+(Stage boundaries defined in `lib/constants.js` STAGES object — edit there to change.)
 
 - Entry fee: Rs. 3,500/player | Total prize pool: Rs. 45,500
 - Weekly: Rs. 1,000/week (winner Rs. 700, runner-up Rs. 300)
@@ -74,13 +79,16 @@ Google Form → CSV download → paste into Google Sheet "Week N" tab
 
 ## Key Code Files (ipl-league-sheets repo)
 | File | Purpose |
-|---|---|
-| `lib/constants.js` | Players, teams, stages, NAME_ALIASES (nicknames → player IDs) |
-| `lib/sheets.js` | Google Sheets API client. Auto-derives status from winner column. |
-| `lib/scoring.js` | Scoring engine. `rankLeaderboard` does competition ranking. |
-| `api/sheets-data.js` | Main endpoint. Returns all data for frontend. 60s cache. |
-| `02-prototype/ill-dashboard/src/data/DataContext.jsx` | React context. Fetches API, falls back to static. |
-| `02-prototype/ill-dashboard/src/pages/Leaderboard.jsx` | 4 tabs: Weekly, Stage, Overall, Picks |
+| --- | --- |
+| `lib/constants.js` | Players, teams, stages, NAME_ALIASES (nicknames → player IDs), `getStageForWeek()` |
+| `lib/sheets.js` | Sheets API client. Reads Match Results, Rules, Week N, Weekly Rules tabs. Auto-derives status from winner. |
+| `lib/scoring.js` | Scoring engine. `computeWeeklyScores(…, weeklyOverrides)`. `rankLeaderboard` uses running-rank variable (not `sorted[i-1].rank`). |
+| `api/sheets-data.js` | Main endpoint. Returns players, weeklyData, matchSchedule, weeklyRules, weekComplete, cumulativePoints. 60s CDN cache. |
+| `api/cron/update-results.js` | Daily cron (11:30 PM IST) — auto-fetches results from CricAPI if `CRICKET_API_KEY` set. |
+| `02-prototype/ill-dashboard/src/data/DataContext.jsx` | React context. Fetches API, falls back to static sampleData. `rankAndSort` uses running-rank variable. |
+| `02-prototype/ill-dashboard/src/pages/Leaderboard.jsx` | 4 tabs: Weekly, Stage, Overall, Picks. Shows rules strip per week. Passes `weekComplete` to table. |
+| `02-prototype/ill-dashboard/src/components/LeaderboardTable.jsx` | Table with rank badges, winner/runner-up labels (only when `weekComplete=true`). |
+| `02-prototype/ill-dashboard/src/components/PredictionsView.jsx` | Picks tab: accordion match cards with all players' picks per week. |
 
 ---
 
@@ -88,10 +96,16 @@ Google Form → CSV download → paste into Google Sheet "Week N" tab
 **ID:** `15YEBSCRUec2f0DhPmYLVipr8h9A944KViB7INRVfeMc`
 
 | Tab | What it contains |
-|---|---|
-| `Rules` | Scoring points per stage — edit here to change rules |
+| --- | --- |
+| `Rules` | Default scoring points per stage (stage1_points, stage2_points, stage3_points columns) |
+| `Weekly Rules` | *(optional)* Per-week rule overrides. Columns: `week`, `rule_id`, `points`, `note`. If absent, falls back to Rules tab. |
 | `Match Results` | All 74 matches + winner column (admin fills winner after each match) |
 | `Week N` | Player predictions for week N (paste from Google Form CSV) |
+
+### How to update rules week-by-week
+- To change points for a specific week: add a row in **Weekly Rules** tab (e.g., week=9, rule_id=correct_pick, points=20, note=Playoffs double!)
+- To change stage-wide defaults: edit `stage1_points`/`stage2_points`/`stage3_points` in **Rules** tab
+- No code deploy needed. Changes reflect on site within 60 seconds.
 
 ---
 
@@ -107,7 +121,9 @@ Google Form → CSV download → paste into Google Sheet "Week N" tab
 ## Known Bugs Fixed (don't reintroduce)
 1. **Status field bug** — `status` column in sheet used to block scoring. Now auto-derived from `winner` column. Only `winner` matters.
 2. **Blank future weeks** — weeks with no data now show all players at 0, not blank screen.
-3. **Tied rank** — players with same points now share rank (fixed March 31, 2026).
+3. **Tied rank (critical)** — `rankLeaderboard` and `rankAndSort` both had a bug: `sorted[i-1].rank` read from the pre-map array where `rank` was never set (always undefined). Fixed by using a running `currentRank` variable instead. Never revert to the `sorted[i-1].rank` pattern.
+4. **Winner labels showing prematurely** — "₹700 Winner" / "₹300 Runner-up" labels showed mid-week and on empty future weeks. Fixed: labels only show when `weekComplete=true` (all matches in week have a winner filled in).
+5. **All-zero weeks showing rank 1 for everyone** — future weeks showed everyone at rank 1 (tied). Fixed: zero-fallback now assigns sequential ranks (i+1).
 
 ---
 

@@ -449,7 +449,8 @@ The scoring engine must implement the following logic:
 - `GOOGLE_SHEETS_PRIVATE_KEY` — service account private key (rotate if exposed)
 
 **Google Sheet tabs:**
-- `Rules` — scoring points per stage (editable by admin, no code deploy needed)
+- `Rules` — default scoring points per stage (stage1/stage2/stage3 columns)
+- `Weekly Rules` — *(optional)* per-week overrides. Columns: `week`, `rule_id`, `points`, `note`
 - `Match Results` — match schedule + winner column (admin fills winner to trigger scoring)
 - `Week N` — predictions per player per week (paste CSV from Google Form responses)
 
@@ -480,17 +481,32 @@ The scoring engine must implement the following logic:
 
 ### 12.1 Dynamic Rules — How Weekly Twists Work
 
-The `Rules` tab in Google Sheet is structured to support per-stage scoring:
+**Two-level rule system (both in Google Sheet, no code deploy needed):**
 
-| rule_key | points | stage1 | stage2 | stage3 | notes |
-|---|---|---|---|---|---|
-| correct_pick | 10 | 10 | 10 | 15 | Can override per stage |
-| wrong_pick | 0 | 0 | 0 | 0 | Always 0 |
-| no_result | 5 | 5 | 5 | 5 | Rain/abandoned |
+**Level 1 — ****`Rules`**** tab** (stage-level defaults):
 
-**To change rules for a new week/stage:** Edit the stage column in the Rules tab. No code deploy needed. Changes reflect on site within 60 seconds.
+| rule_id | description | type | stage1_points | stage2_points | stage3_points | active |
+| --- | --- | --- | --- | --- | --- | --- |
+| correct_pick | Correct prediction | scoring | 10 | 10 | 20 | TRUE |
+| wrong_pick | Wrong prediction | scoring | 0 | 0 | 0 | TRUE |
+| no_result | Rain / No Result | scoring | 5 | 5 | 10 | TRUE |
 
-**Weekly twists (bonus rules):** If a twist applies to a specific week (not just a stage), add a new row with a `week_N` column and handle it in `lib/scoring.js`. Document any new twist here before implementing.
+**Level 2 — ****`Weekly Rules`**** tab** (week-specific overrides, optional):
+
+| week | rule_id | points | note |
+| --- | --- | --- | --- |
+| 9 | correct_pick | 20 | Playoffs double! |
+| 9 | no_result | 10 | Playoffs double NR |
+
+**Priority order in scoring engine:** Week override → Stage default → Fallback (10/0/5)
+
+**To change rules mid-season:**
+- Stage-wide change: edit `stage2_points` column in Rules tab
+- Week-specific twist: add a row in Weekly Rules tab
+- No code deploy needed. Changes reflect within 60 seconds.
+- Rules for the selected week are shown on the UI (below the week dropdown).
+
+**Weekly rules transparency:** The leaderboard shows a rules strip under the week selector: `✓ Correct +10 | ✗ Wrong 0 | ≈ No Result +5` — players can always see what rules applied to their week.
 
 ---
 
