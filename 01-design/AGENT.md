@@ -16,7 +16,7 @@ Indian Lappa League (ILL) — private IPL 2026 prediction league for 12 NSIT alu
 | `ipl-league-sheets` | **Active prototype** — Google Sheets backend, serverless scoring | https://ipl-league-sheets.vercel.app |
 | `ipl-prediction-league` | Shaan's work — traditional Node.js backend (separate, don't touch without Rajat confirming) | ipl-prediction-league.vercel.app |
 
-**Always work in ****`ipl-league-sheets`**** unless explicitly told otherwise.**
+**Always work in \****`ipl-league-sheets`**\*\* unless explicitly told otherwise.**
 
 ---
 
@@ -111,7 +111,7 @@ Google Form → CSV download → paste into Google Sheet "Week N" tab
 
 ## Vercel Env Vars (ipl-league-sheets project)
 - `GOOGLE_SHEETS_ID`
-- `GOOGLE_SHEETS_CLIENT_EMAIL` — ipl-sheets-bot@ipl-league-491802.iam.gserviceaccount.com
+- ipl-sheets-bot@ipl-league-491802.iam.gserviceaccount.com`GOOGLE_SHEETS_CLIENT_EMAIL` — ipl-sheets-bot@ipl-league-491802.iam.gserviceaccount.com
 - `GOOGLE_SHEETS_PRIVATE_KEY` — rotate if ever exposed in plaintext chat
 - `CRON_SECRET`
 - `CRICKET_API_KEY` — (optional) CricAPI free tier, 100 calls/day
@@ -124,6 +124,42 @@ Google Form → CSV download → paste into Google Sheet "Week N" tab
 3. **Tied rank (critical)** — `rankLeaderboard` and `rankAndSort` both had a bug: `sorted[i-1].rank` read from the pre-map array where `rank` was never set (always undefined). Fixed by using a running `currentRank` variable instead. Never revert to the `sorted[i-1].rank` pattern.
 4. **Winner labels showing prematurely** — "₹700 Winner" / "₹300 Runner-up" labels showed mid-week and on empty future weeks. Fixed: labels only show when `weekComplete=true` (all matches in week have a winner filled in).
 5. **All-zero weeks showing rank 1 for everyone** — future weeks showed everyone at rank 1 (tied). Fixed: zero-fallback now assigns sequential ranks (i+1).
+
+---
+
+## Weekly Twist Mechanics (player-specific rules)
+
+Some weeks have special scoring mechanics beyond BAU. These are collected via Google Form (extra columns) and applied automatically by the scoring engine.
+
+### Week 2 — Double Dip + Hate Team
+
+**Double Dip** (compulsory):
+- Player picks ONE match as their Double Dip game
+- Correct prediction on that match: **+20 pts**
+- Wrong prediction: **-10 pts**
+- Google Form column: any column containing "double" (e.g., "Double Dip Match")
+- Value: the match number (e.g., "Match 14" or just "14")
+
+**Hate Team** (optional):
+- Player picks ONE team they hate
+- In ANY match that team plays this week, player is FORCED to predict against them
+- Hate team LOSES: **+15 pts** (+10 correct + 5 bonus)
+- Hate team WINS: **-5 pts** (penalty)
+- If no hate team chosen: BAU scoring applies
+- Google Form column: any column containing "hate" (e.g., "Hate Team")
+- Value: team abbreviation (CSK, MI, RCB, etc.)
+
+**Corner case**: Double Dip game CANNOT be a hate team game. If a player picks the same match, hate team scoring takes priority (not double dip).
+
+**How the Week 2 sheet tab should look**:
+- All regular match prediction columns (as usual)
+- Extra column: `Double Dip Match` — player enters match number
+- Extra column: `Hate Team` — player enters team abbreviation (or leaves blank)
+
+**UI badges in Picks tab**:
+- `DD` orange badge = this is the player's double dip match
+- `💀CSK` pink badge = player's hate team is playing this match
+- Points shown as `+20`/`-10` for DD, `+15`/`-5` for hate team matches
 
 ---
 
