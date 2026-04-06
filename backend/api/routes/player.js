@@ -157,4 +157,85 @@ router.get('/:id/predictions', async (req, res) => {
   }
 });
 
+router.get('/:id/h2h/:opponentId', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const opponentId = parseInt(req.params.opponentId);
+
+    const user = db.users.findUnique(userId);
+    const opponent = db.users.findUnique(opponentId);
+    
+    if (!user || !opponent) {
+      return res.status(404).json({ error: 'Player not found' });
+    }
+
+    const userPredictions = db.predictions.findMany({ where: { userId } });
+    const opponentPredictions = db.predictions.findMany({ where: { userId: opponentId } });
+
+    let mutualWins = 0;
+    let mutualLosses = 0;
+    let ties = 0;
+    let userCorrect = 0;
+    let opponentCorrect = 0;
+
+    for (const p of userPredictions) {
+      const match = db.matches.findUnique(p.matchId);
+      if (!match || !match.winner) continue;
+
+      const oppPred = opponentPredictions.find(op => op.matchId === p.matchId);
+      if (!oppPred) continue;
+
+      if (p.predictedWinner === match.winner) userCorrect++;
+      if (oppPred.predictedWinner === match.winner) opponentCorrect++;
+
+      if (p.predictedWinner === match.winner && oppPred.predictedWinner !== match.winner) {
+        mutualWins++;
+      } else if (oppPred.predictedWinner === match.winner && p.predictedWinner !== match.winner) {
+        mutualLosses++;
+      } else if (p.predictedWinner === match.winner && oppPred.predictedWinner === match.winner) {
+        ties++;
+      }
+    }
+
+    const userWeekly = db.weeklyResults.findMany({ where: { userId } });
+    const oppWeekly = db.weeklyResults.findMany({ where: { userId: opponentId } });
+
+    const userTotalPoints = userWeekly.reduce((sum, w) => sum + w.totalPoints, 0);
+    const oppTotalPoints = oppWeekly.reduce((sum, w) => sum + w.totalPoints, 0);
+
+    const userWeeklyWins = userWeekly.filter(w => w.rank === 1).length;
+    const oppWeeklyWins = oppWeekly.filter(w => w.rank === 1).length;
+
+    res.json({
+      player: { id: user.id, name: user.name },
+      opponent: { id: opponent.id, name: opponent.name },
+      stats: {
+        mutualMatches: mutualWins + mutualLosses + ties,
+        playerWins: mutualWins,
+        opponentWins: mutualLosses,
+        ties,
+        playerCorrect,
+        opponentCorrect,
+        playerTotalPoints,
+        opponentTotalPoints,
+        playerWeeklyWins,
+        opponentWeeklyWins,
+      },
+    });
+  } catch (error) {
+    console.error('Head to head error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.get('/:id/all', async (req, res) => {
+  try {
+    const users = db.users.findMany().filter(u => u.role === 'PARTICIPANT');
+    res.json({ players: users.map(u => ({ id: u.id, name: u.name })) });
+  } catch (error) {
+    console.error('Get all players error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;

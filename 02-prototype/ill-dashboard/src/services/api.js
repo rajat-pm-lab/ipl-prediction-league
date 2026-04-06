@@ -37,6 +37,8 @@ export const api = {
     get: (id) => fetchAPI(`/player/${id}`),
     predictions: (id, week) => 
       fetchAPI(`/player/${id}/predictions${week ? `?week=${week}` : ''}`),
+    h2h: (id, opponentId) => fetchAPI(`/player/${id}/h2h/${opponentId}`),
+    all: () => fetchAPI('/player/0/all'),
   },
 
   matches: {

@@ -24,6 +24,11 @@ const IPL_TEAMS = [
   { abbr: 'LSG', color: '#A72056' },
 ]
 
+const TEAM_LOGOS = {
+  CSK: '💛', MI: '🔵', RCB: '🔴', KKR: '💜', DC: '🔵',
+  SRH: '🟠', PBKS: '🔴', RR: '🔵', GT: '⚫', LSG: '🩷',
+}
+
 export default function PlayerProfile() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -32,13 +37,14 @@ export default function PlayerProfile() {
   const [player, setPlayer] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-
-  useEffect(() => {
-    loadPlayer()
-  }, [playerId])
+  const [predictionHistory, setPredictionHistory] = useState([])
+  const [h2hOpen, setH2hOpen] = useState(false)
+  const [h2hOpponent, setH2hOpponent] = useState(null)
+  const [h2hData, setH2hData] = useState(null)
+  const [allPlayers, setAllPlayers] = useState([])
+  const [loadingH2h, setLoadingH2h] = useState(false)
 
   async function loadPlayer() {
-    setLoading(true)
     try {
       const data = await api.player.get(playerId)
       setPlayer(data)
@@ -48,6 +54,62 @@ export default function PlayerProfile() {
     } finally {
       setLoading(false)
     }
+  }
+
+  async function loadPredictionHistory() {
+    try {
+      const data = await api.player.predictions(playerId)
+      setPredictionHistory(data.history || [])
+    } catch (err) {
+      console.error('Failed to load predictions:', err)
+    }
+  }
+
+  async function loadAllPlayers() {
+    try {
+      const data = await api.player.all()
+      setAllPlayers(data.players || [])
+    } catch (err) {
+      console.error('Failed to load players:', err)
+    }
+  }
+
+  useEffect(() => {
+    setLoading(true)
+    loadPlayer()
+    loadPredictionHistory()
+    loadAllPlayers()
+    
+    const interval = setInterval(() => {
+      loadPlayer()
+      loadPredictionHistory()
+    }, 30000)
+    
+    return () => clearInterval(interval)
+  }, [playerId])
+
+  async function handleH2HSelect(opponentId) {
+    setLoadingH2h(true)
+    try {
+      const data = await api.player.h2h(playerId, opponentId)
+      setH2hData(data)
+      setH2hOpponent(allPlayers.find(p => p.id === opponentId))
+      setH2hOpen(true)
+    } catch (err) {
+      console.error('Failed to load h2h:', err)
+    } finally {
+      setLoadingH2h(false)
+    }
+  }
+
+  function getResultBadge(result) {
+    if (result === 'correct') {
+      return { icon: '✓', color: 'var(--green)', bg: 'rgba(0,200,83,0.12)' }
+    }
+    if (result === 'draw') {
+      return { icon: '≈', color: 'var(--grey)', bg: 'rgba(136,153,170,0.12)' }
+    }
+    return { icon: '✗', color: 'var(--red)', bg: 'rgba(255,23,68,0.12)' }
   }
 
   if (loading) {
@@ -254,21 +316,118 @@ export default function PlayerProfile() {
       </Section>
 
       <Section title="Match History" accentColor="var(--red)">
-        <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-secondary)', fontSize: 12 }}>
-          View predictions in Picks tab
-        </div>
+        {predictionHistory.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-secondary)', fontSize: 12 }}>
+            No predictions yet
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {predictionHistory.slice().reverse().map((match, idx) => {
+              const badge = getResultBadge(match.result)
+              return (
+                <div key={idx} style={{
+                  display: 'flex', alignItems: 'center', gap: 12, padding: 10,
+                  background: 'rgba(255,255,255,0.03)', borderRadius: 10,
+                  border: '1px solid rgba(255,255,255,0.04)',
+                }}>
+                  <div style={{
+                    width: 32, height: 32, borderRadius: 8, display: 'flex',
+                    alignItems: 'center', justifyContent: 'center', fontSize: 18,
+                    background: badge.bg, color: badge.color, fontWeight: 900,
+                  }}>
+                    {badge.icon}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700 }}>
+                      <span>{TEAM_LOGOS[match.home] || '?'} {match.home}</span>
+                      <span style={{ color: 'var(--text-secondary)', fontSize: 11 }}>vs</span>
+                      <span>{TEAM_LOGOS[match.away] || '?'} {match.away}</span>
+                    </div>
+                    <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginTop: 2 }}>
+                      Picked: <span style={{ color: match.predicted === match.winner ? 'var(--green)' : 'var(--text-primary)' }}>{match.predicted}</span>
+                      {match.winner && match.winner !== match.predicted && (
+                        <span> • Winner: {match.winner}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: 14, fontWeight: 900, color: badge.color }}>+{match.points}</div>
+                    <div style={{ fontSize: 9, color: 'var(--text-secondary)' }}>M{match.matchNum}</div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </Section>
 
       <Section title="Head to Head" accentColor="var(--blue)">
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
-          padding: 16, background: 'rgba(255,255,255,0.02)',
-          border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 12, cursor: 'pointer',
-        }}>
-          <span style={{ fontSize: 18 }}>⚔️</span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)' }}>Compare with another player</span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-secondary)' }}><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
+        {h2hOpen && h2hData ? (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 16 }}>
+              <div style={{ textAlign: 'center' }}>
+                <Avatar player={{ name: player.name, avatarUrl: player.avatarUrl }} size={48} />
+                <div style={{ fontSize: 11, fontWeight: 700, marginTop: 4 }}>{player.name}</div>
+              </div>
+              <div style={{ fontSize: 20, color: 'var(--text-secondary)' }}>⚔️</div>
+              <div style={{ textAlign: 'center' }}>
+                <Avatar player={{ name: h2hOpponent?.name, avatarUrl: null }} size={48} />
+                <div style={{ fontSize: 11, fontWeight: 700, marginTop: 4 }}>{h2hOpponent?.name}</div>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
+              {[
+                { label: 'Mutual Wins', p1: h2hData.stats.playerWins, p2: h2hData.stats.opponentWins },
+                { label: 'Total Points', p1: h2hData.stats.playerTotalPoints, p2: h2hData.stats.opponentTotalPoints },
+                { label: 'Correct Picks', p1: h2hData.stats.playerCorrect, p2: h2hData.stats.opponentCorrect },
+                { label: 'Weekly Wins', p1: h2hData.stats.playerWeeklyWins, p2: h2hData.stats.opponentWeeklyWins },
+              ].map((stat) => (
+                <div key={stat.label} style={{ textAlign: 'center', padding: 10, background: 'rgba(255,255,255,0.03)', borderRadius: 10 }}>
+                  <div style={{ fontSize: 9, color: 'var(--text-secondary)', marginBottom: 6 }}>{stat.label}</div>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 16, fontWeight: 900, color: stat.p1 >= stat.p2 ? 'var(--green)' : 'var(--text-secondary)' }}>{stat.p1}</span>
+                    <span style={{ fontSize: 10, color: 'var(--text-secondary)' }}>-</span>
+                    <span style={{ fontSize: 16, fontWeight: 900, color: stat.p2 >= stat.p1 ? 'var(--green)' : 'var(--text-secondary)' }}>{stat.p2}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ textAlign: 'center', padding: 8, background: h2hData.stats.playerWins > h2hData.stats.opponentWins ? 'rgba(0,200,83,0.1)' : h2hData.stats.playerWins < h2hData.stats.opponentWins ? 'rgba(255,23,68,0.1)' : 'rgba(255,255,255,0.03)', borderRadius: 8 }}>
+              <span style={{ fontSize: 12, fontWeight: 700 }}>
+                {h2hData.stats.playerWins > h2hData.stats.opponentWins ? player.name : h2hData.stats.playerWins < h2hData.stats.opponentWins ? h2hOpponent?.name : 'Tied'} leads in head-to-head
+              </span>
+            </div>
+            <button
+              onClick={() => setH2hOpen(false)}
+              style={{ width: '100%', marginTop: 12, padding: 10, background: 'var(--surface-alt)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, color: 'var(--text-secondary)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+            >
+              Close
+            </button>
+          </div>
+        ) : (
+          <div>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 12 }}>
+              Compare prediction records with another player
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+              {allPlayers.filter(p => p.id !== playerId).slice(0, 6).map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => handleH2HSelect(p.id)}
+                  disabled={loadingH2h}
+                  style={{
+                    padding: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+                    borderRadius: 10, color: 'var(--text-primary)', fontSize: 11, fontWeight: 700,
+                    cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                  }}
+                >
+                  <Avatar player={{ name: p.name, avatarUrl: null }} size={32} />
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{p.name.split(' ')[0]}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </Section>
     </div>
   )
